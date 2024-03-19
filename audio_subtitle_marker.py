@@ -74,6 +74,7 @@ def add_timestamp():
             click_count-=1 # unregister click since error
             show_error("End time cannot be earlier than (or equal to) the start time!")
 
+    update_gui()
     output_text.see("end")
 
 # Function to toggle play/pause of audio
@@ -226,7 +227,7 @@ def update_output_text():
 
 # Function to create GUI
 def create_gui():
-    global root, time_label, playback, output_text, audio_title, toggle_button, auto_verse_mode, auto_verse_button, main_buttons
+    global root, time_label, playback, output_text, audio_title, toggle_button, auto_verse_mode, auto_verse_button, mark_verse_button, main_buttons
 
     root = Tk()
     root.title("Audio Subtitle Marker Tool")
@@ -254,11 +255,14 @@ def create_gui():
     seek_last_button = Button(root, text="Seek to Last End Timestamp (F)", command=seek_last_end_timestamp, font=('Arial', 10))
     seek_last_button.pack(pady=10)
 
-    auto_verse_button = Button(root, text=f"Auto Verse Mode: {auto_verse_mode}", command=toggle_auto_verse, bg="green" if auto_verse_mode else "red", fg="white" if auto_verse_mode else "black", font=('Arial', 10))
+    auto_verse_button = Button(root, text=f"Auto Verse Mode: {auto_verse_mode}", command=toggle_auto_verse, bg="green" if auto_verse_mode else "red", fg="white" if auto_verse_mode else "black", font=('Arial', 9))
     auto_verse_button.pack(pady=10)
 
+    mark_verse_button = Button(root, text=f"Mark Verse: Start (S)", command=add_timestamp, bg="green", font=('Courier New', 12))
+    mark_verse_button.pack(pady=10)
+
     # we will keep all the buttons related to audio in an array to disable/enable as needed easily
-    main_buttons = [toggle_button, skip_forward_button, skip_back_button, seek_last_button, auto_verse_button]
+    main_buttons = [toggle_button, skip_forward_button, skip_back_button, seek_last_button, auto_verse_button, mark_verse_button]
 
     # Output text area
     output_text = Text(root, wrap="none", height=10, width=50)
@@ -288,6 +292,11 @@ def update_gui():
         auto_verse_button.config(text=f"Auto Verse Mode: On (T)", bg="green")
     else:
         auto_verse_button.config(text=f"Auto Verse Mode: Off (T)", bg="red")
+
+    if click_count==1:
+        mark_verse_button.config(text=f"Mark Verse: End (S)", command=add_timestamp, bg="red")
+    else:
+        mark_verse_button.config(text=f"Mark Verse: Start (S)", command=add_timestamp, bg="green")
 
     for btn in main_buttons:
         btn.configure(state="normal" if audio_loaded else "disabled")
