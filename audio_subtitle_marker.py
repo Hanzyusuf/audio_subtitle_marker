@@ -1,5 +1,6 @@
 import os
 import time
+import sys
 from pathlib import Path
 from tkinter import Tk, Label, Button, filedialog, Text, Scrollbar, messagebox
 from just_playback import Playback
@@ -277,6 +278,10 @@ def create_gui():
     listener.start()
 
     update_gui()
+
+    # Handle window close event
+    root.protocol("WM_DELETE_WINDOW", _quit)
+
     root.mainloop()
 
 # Function to update parts of gui (to call when certain states have changed)
@@ -389,6 +394,14 @@ def reset_verse_state():
 # Function to display popup errors
 def show_error(message):
     messagebox.showerror("Error", message)
+
+# Function to exit the program when tkinter window is closed
+def _quit():
+    global root
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        root.quit()
+        root.destroy()
+        sys.exit(0)
 
 # Initialize playback object
 playback = Playback()
