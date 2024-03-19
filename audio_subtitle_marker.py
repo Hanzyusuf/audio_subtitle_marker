@@ -6,6 +6,8 @@ from tkinter import Tk, Label, Button, filedialog, Text, Scrollbar, messagebox
 from just_playback import Playback
 from pynput import keyboard
 
+seek_skip_duration = 2
+
 audio_loaded = False
 verse_index = 1 # Keep track of the last saved verse (note: we are starting from 1 and not 0)
 last_saved_time = 0  # Keep track of the last saved end time
@@ -26,13 +28,21 @@ def on_press(key):
     if k == 's':
         add_timestamp()
     elif k == 'a':
-        seek_skip(-2)
+        seek_skip(-seek_skip_duration)
     elif k == 'd':
-        seek_skip(2)
+        seek_skip(seek_skip_duration)
     elif k == 't':
         toggle_auto_verse()
+
+    elif k == 'g':
+        seek_next_verse()
     elif k == 'f':
-        seek_last_end_timestamp()
+        seek_previous_verse()
+    elif k == 'h':
+        seek_first_verse()
+    elif k == 'j':
+        seek_last_verse()
+
     elif k == 'x':
         if(click_count == 1):
             cancel_verse() # simply cancels the verse that has it's start already marked 
@@ -245,22 +255,28 @@ def create_gui():
     auto_update_time_label()
 
     toggle_button = Button(root, text="Play/Pause (Spacebar)", command=toggle_play_pause, font=('Arial', 10))
-    toggle_button.pack(pady=10)
+    toggle_button.pack(pady=4)
 
-    skip_forward_button = Button(root, text="Skip Forward 2s (D)", command=lambda: seek_skip(2), font=('Arial', 10))
-    skip_forward_button.pack(pady=10)
+    skip_forward_button = Button(root, text=f"Skip Forward {seek_skip_duration}s (D)", command=lambda: seek_skip(2), font=('Arial', 10))
+    skip_forward_button.pack(pady=4)
 
-    skip_back_button = Button(root, text="Skip Back 2s (A)", command=lambda: seek_skip(-2), font=('Arial', 10))
-    skip_back_button.pack(pady=10)
+    skip_back_button = Button(root, text=f"Skip Back {seek_skip_duration}s (A)", command=lambda: seek_skip(-2), font=('Arial', 10))
+    skip_back_button.pack(pady=4)
 
-    seek_last_button = Button(root, text="Seek to Last End Timestamp (F)", command=seek_last_end_timestamp, font=('Arial', 10))
-    seek_last_button.pack(pady=10)
+    seek_previous_button = Button(root, text="Seek to Previous Verse (F)", command=seek_previous_verse, font=('Courier New', 8))
+    seek_previous_button.pack(pady=4)
+    seek_next_button = Button(root, text="Seek to Next Verse (G)", command=seek_next_verse, font=('Courier New', 8))
+    seek_next_button.pack(pady=4)
+    seek_first_button = Button(root, text="Seek to First Verse (H)", command=seek_first_verse, font=('Courier New', 8))
+    seek_first_button.pack(pady=4)
+    seek_last_button = Button(root, text="Seek to Last Verse (J)", command=seek_last_verse, font=('Courier New', 8))
+    seek_last_button.pack(pady=4)
 
     auto_verse_button = Button(root, text=f"Auto Verse Mode: {auto_verse_mode}", command=toggle_auto_verse, bg="green" if auto_verse_mode else "red", fg="white" if auto_verse_mode else "black", font=('Arial', 9))
-    auto_verse_button.pack(pady=10)
+    auto_verse_button.pack(pady=4)
 
     mark_verse_button = Button(root, text=f"Mark Verse: Start (S)", command=add_timestamp, bg="green", font=('Courier New', 12))
-    mark_verse_button.pack(pady=10)
+    mark_verse_button.pack(pady=8)
 
     # we will keep all the buttons related to audio in an array to disable/enable as needed easily
     main_buttons = [toggle_button, skip_forward_button, skip_back_button, seek_last_button, auto_verse_button, mark_verse_button]
@@ -306,8 +322,64 @@ def update_gui():
     for btn in main_buttons:
         btn.configure(state="normal" if audio_loaded else "disabled")
 
+# Seek to the beginning of the first verse
+def seek_first_verse():
+    if(not audio_loaded):
+        return
+    
+    if os.path.exists(output_file):
+        with open(output_file, 'r') as f:
+            lines = f.readlines()
+            if lines:
+                for line in lines:
+                    if '-' in line:
+                        start_time, _ = line.strip().split('-')
+                        playback.seek(float(start_time))
+                        update_time_label()
+                        return
+
+# Seek to the beginning of the next verse
+def seek_next_verse():
+    if(not audio_loaded):
+        return
+    
+    if os.path.exists(output_file):
+        with open(output_file, 'r') as f:
+            lines = f.readlines()
+            if lines:
+                current_time = playback.curr_pos
+                for line in lines:
+                    if '-' in line:
+                        start_time, end_time = line.strip().split('-')
+                        if float(start_time) > current_time:
+                            playback.seek(float(start_time))
+                            update_time_label()
+                            return
+
+# Seek to the beginning of the previous verse
+def seek_previous_verse():
+    if(not audio_loaded):
+        return
+    
+    if os.path.exists(output_file):
+        with open(output_file, 'r') as f:
+            lines = f.readlines()
+            if lines:
+                current_time = playback.curr_pos
+                previous_verse_start_time = 0
+                for line in reversed(lines):
+                    if '-' in line:
+                        start_time, end_time = line.strip().split('-')
+                        if float(start_time)+0.4 < current_time:
+                            playback.seek(float(start_time))
+                            update_time_label()
+                            return
+                playback.seek(0)
+                update_time_label()
+
+
 # Function to seek to the last end timestamp in the output file
-def seek_last_end_timestamp():
+def seek_last_verse():
     if(not audio_loaded):
         return
     
