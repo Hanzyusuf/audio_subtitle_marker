@@ -366,7 +366,6 @@ def seek_previous_verse():
             lines = f.readlines()
             if lines:
                 current_time = playback.curr_pos
-                previous_verse_start_time = 0
                 for line in reversed(lines):
                     if '-' in line:
                         start_time, end_time = line.strip().split('-')
@@ -386,11 +385,15 @@ def seek_last_verse():
     if os.path.exists(output_file):  # Check if the output file exists
         with open(output_file, 'r') as f:
             lines = f.readlines()
-            if lines and len(lines) >= 2:
-                last_line = lines[-1].strip()
-                _, end_time = last_line.split('-')
-                playback.seek(float(end_time))
-                update_time_label()
+            if lines:
+                current_time = playback.curr_pos
+                for line in reversed(lines):
+                    if '-' in line:
+                        start_time, end_time = line.strip().split('-')
+                        _, end_time = line.split('-')
+                        playback.seek(float(start_time))
+                        update_time_label()
+                        return
 
 # Function to handle file selection using GUI dialog
 def select_audio_file():

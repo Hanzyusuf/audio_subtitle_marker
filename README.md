@@ -28,7 +28,10 @@ The Audio Subtitle Marker Tool is a simple utility for marking timestamps of dia
 - **A**: Skip backward 2 seconds
 - **D**: Skip forward 2 seconds
 - **T**: Toggle auto verse mode
-- **F**: Seek to end of last marked verse
+- **F**: Seek to previous verse
+- **G**: Seek to next verse
+- **H**: Seek to first verse
+- **J**: Seek to last verse
 - **X**: Delete last marked verse OR cancel the currently started one
 
 ## Requirements
